@@ -212,7 +212,7 @@ setMethod('shew_synd',
                     pre.process=FALSE,
                     diff.window=7,
                     family="poisson",
-                    formula="dow+sin+cos+year+AR1+AR2+AR3+AR4+AR5+AR6+AR7+off.set",
+                    formula="dow+sin+cos+year+AR1+AR2+AR3+AR4+AR5+AR6+AR7",
                     use.offset=NULL,
                     frequency=365
           )
@@ -380,9 +380,12 @@ if (pre.process=="diff"){
       afterholidays <- y@dates$afterholidays[start:end]
     }
     
-    off.set<-offset(log(use.offset[start:end]))
-    
-    fn.formula=as.formula(paste0("days~",formula))
+    if (is.null(use.offset)){
+      fn.formula=as.formula(paste0("days~",formula))      
+    }else{
+      data.offset<-use.offset[start:end]
+      fn.formula=as.formula(paste0("days~",formula,"+offset(log(data.offset))"))
+    }        
     
     
     #####for prediction part
@@ -419,9 +422,10 @@ if (pre.process=="diff"){
 
     }
     
-    off.set.new <- offset(log(use.offset[(tpoint-guard.band+1):(tpoint)]))
-    new.data <- cbind(new.data,off.set=off.set.new)
-    
+    if (is.null(use.offset)==FALSE){
+      data.offset.new <- use.offset[(tpoint-guard.band+1):(tpoint)]
+      new.data <- cbind(new.data,data.offset=data.offset.new)
+    }
     
     regular=colnames(new.data)
     formula <- str_replace_all(formula, pattern=" ", repl="")
