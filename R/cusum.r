@@ -211,6 +211,7 @@ setMethod('cusum_synd',
                     diff.window=7,
                     family="poisson",
                     formula="dow+sin+cos+year+AR1+AR2+AR3+AR4+AR5+AR6+AR7",
+                    use.offset=NULL,
                     frequency=365
           )
 {
@@ -377,9 +378,13 @@ setMethod('cusum_synd',
     if(length(y@dates$afterholidays)>0){
       afterholidays <- y@dates$afterholidays[start:end]
     }
-                    
-                    
-                    fn.formula=as.formula(paste0("days~",formula))
+    
+                    if (is.null(use.offset)){
+                      fn.formula=as.formula(paste0("days~",formula))
+                    } else {
+                      data.offset<-use.offset[start:end]
+                      fn.formula=as.formula(paste0("days~",formula,"+offset(log(data.offset))"))
+                    }
                     
                     
                     #####for prediction part
@@ -413,6 +418,11 @@ setMethod('cusum_synd',
       afterholidays.new <- y@dates$afterholidays[(tpoint-guard.band+1):(tpoint)]
       new.data <- cbind(new.data,afterholidays=afterholidays.new)
     }
+    
+                    if (is.null(use.offset)==FALSE){
+                      data.offset.new <- use.offset[(tpoint-guard.band+1):(tpoint)]
+                      new.data <- cbind(new.data,data.offset=data.offset.new)
+                    }
     
                     
                     regular=colnames(new.data)
